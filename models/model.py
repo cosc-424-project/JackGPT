@@ -1,18 +1,7 @@
-'''
-64
-16
-256
-256
-13
-'''
-
-import PIL
-import PIL.Image
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torchvision.transforms as transforms
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, random_split
 from dataset import CardDataset13
 
 class M13 (nn.Module):
@@ -47,34 +36,59 @@ class M13 (nn.Module):
             tmp3 = torch.flatten(tmp2, 1)
             tmp4 = F.relu(self.lin1.forward(tmp3))
             tmp5 = F.relu(self.lin2.forward(tmp4))
-            tmp6 = F.relu(self.lin3.forward(tmp5))
+            tmp6 = self.lin3.forward(tmp5)
             return tmp6
 
 
-data = torch.rand((1, 32, 32))
+# Create model
 m13 = M13()
-dataset = CardDataset13()
-dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
 
-loss_fn = nn.CrossEntropyLoss()
-optim = torch.optim.Adam(m13.parameters())
-
+# Curate data
+TRAIN_FRAC = .8
 NUM_EPOCHS = 30
 
-ctr = 0
-running_loss = 0
+data = torch.rand((1, 32, 32))
+dataset = CardDataset13()
+train, test = random_split(dataset, [TRAIN_FRAC, 1 - TRAIN_FRAC])
+print(f"Train: {len(train)}    Test: {len(test)}")
+
+train_dl = DataLoader(train, batch_size=32, shuffle=True)
+test_dl = DataLoader(test, batch_size=32, shuffle=True)
+print(f"Train Batches: {len(train_dl)}    Test Batches: {len(test_dl)}")
+
+
+def eval_model():
+    with torch.inference_mode():
+        num_correct = 0
+        num_seen = 0
+        loss_sum = 0
+
+        # iterate over testing data
+        for test_imgs, test_labels in test_dl:
+            test_pred: torch.FloatTensor = m13(test_imgs)
+            tmp_correct = (test_pred.argmax(dim=1) == test_labels).float().sum().item()
+            num_correct += tmp_correct
+            num_seen += len(test_labels)
+            loss = F.cross_entropy(test_pred, test_labels)
+            loss_sum += loss
+
+    return loss_sum / len(test_dl), num_correct / num_seen
+
+
+# Begin training
+optim = torch.optim.Adam(m13.parameters(), lr=.001)
 for epoch in range(NUM_EPOCHS):
-    for imgs, labels in dataloader:
-        # train
+    # train for one epoch
+    train_loss = 0
+    for imgs, labels in train_dl:
         pred = m13(imgs)
-        loss: torch.FloatTensor = loss_fn(pred, labels)
+        loss = F.cross_entropy(pred, labels)
         optim.zero_grad()
         loss.backward()
         optim.step()
+        train_loss += loss.item()
+    train_loss /= len(train_dl)
 
-        running_loss += loss.item()
-        # test if necessary
-        if ctr % 100 == 0:
-            print(f"{ctr:<8d}: {loss / 100:8.3f}", flush=True)
-            running_loss = 0
-        ctr += 1
+    # test after each epoch
+    test_loss, test_acc = eval_model()
+    print(f"Epoch {epoch}, Train Loss: {train_loss:5.3f}, Test Loss: {test_loss:5.3f}, Test Acc: {test_acc:.3f}", flush=True)
