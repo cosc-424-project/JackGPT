@@ -1,0 +1,27 @@
+# Image Generator
+
+## Dataset links
+
+### Videos
+
+Kaggle Link: [Video Dataset](https://www.kaggle.com/datasets/trishupatel28/playing-card-dataset-videos)
+
+```bash
+# Download command
+curl -L -o ./videos.zip https://www.kaggle.com/api/v1/datasets/download/trishupatel28/playing-card-dataset-videos
+```
+
+### Images
+
+Kaggle Link: [Images Dataset](https://www.kaggle.com/datasets/trishupatel28/playing-card-dataset)
+
+```bash
+# Download command
+curl -L -o ./images.zip https://www.kaggle.com/api/v1/datasets/download/trishupatel28/playing-card-dataset
+```
+
+## How to use
+
+Download the video dataset [link/command above](#videos) and run the Jupyter notebook. An output image directory will be made with all processed images. To add additional input videos, add them in a subdirectory under `videos` where the file name in the label. For example, if I want to add another deck of cards with a ace of spades, the input video path will be `videos/deck_2/ace_of_spades.mp4` and the output images will be under `images/deck_2/ace_of_spades`.
+
+A fully processed dataset can also be found [here](#images).
