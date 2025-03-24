@@ -3,8 +3,9 @@ from torch.utils.data import Dataset
 from torchvision.transforms import transforms
 
 
-class CardDataset13(Dataset):
-    def __init__(self):
+class CardDataset(Dataset):
+    def __init__(self, is_13=True):
+        self.is_13 = is_13
         self.img_src = self.__load_data()
 
     def __load_data(self):
@@ -58,10 +59,10 @@ class CardDataset13(Dataset):
         return len(self.img_src)
 
     def __getitem__(self, idx):
-        return self.img_src[idx], idx // 200
+        return self.img_src[idx], idx // 200 if self.is_13 else idx // 50
     
 
 if __name__ == "__main__":
-    cd13 = CardDataset13()
+    cd13 = CardDataset()
     print(cd13.__getitem__(0)[0].shape)
-    # 127x90
+    # 126x90
