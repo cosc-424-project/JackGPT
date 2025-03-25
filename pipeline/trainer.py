@@ -1,7 +1,7 @@
 import torch
 from torch.utils.data import DataLoader, random_split
-from dataset import CardDataset
-from model import CardClassifier
+from pipeline.dataset import CardDataset
+from pipeline.model import CardClassifier
 import torch.nn.functional as F
 
 
@@ -58,11 +58,3 @@ class Trainer:
             # test after each epoch
             test_loss, test_acc = self.eval_model()
             print(f"Epoch {epoch}, Train Loss: {train_loss:5.3f}, Test Loss: {test_loss:5.3f}, Test Acc: {test_acc:.3f}", flush=True)
-
-
-if __name__ == "__main__":
-    trainer13 = Trainer(num_epochs=3, train_frac=.7, is_13=True)
-    trainer13.train()
-    print()
-    trainer52 = Trainer(num_epochs=4, train_frac=.7, is_13=False)
-    trainer52.train()
