@@ -7,10 +7,16 @@ datagen()
 
 # create and train model
 decks = os.listdir("processed")
-t13 = Trainer(
-    num_epochs=10,
-    is_13=False,
-    train_decks=decks[0:-1],
-    test_decks=[decks[-1]]
-)
-t13.train()
+for deck in decks:
+    print(f"\nTesting {deck}")
+    testing_deck = deck
+    training_decks = decks.copy()
+    training_decks.remove(deck)
+
+    t13 = Trainer(
+        num_epochs=5,
+        is_13=True,
+        train_decks=training_decks,
+        test_decks=[testing_deck]
+    )
+    t13.train()
