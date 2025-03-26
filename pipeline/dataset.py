@@ -7,7 +7,8 @@ import os
 PICS_PER_CARD = 10
 
 class CardDataset(Dataset):
-    def __init__(self, is_13=True):
+    def __init__(self, is_train: bool, is_13=True):
+        self.is_train = is_train
         self.is_13 = is_13
         self.counts: dict[str, int] = {}
         self.img_src = self.__load_data()
@@ -20,10 +21,16 @@ class CardDataset(Dataset):
         ])
 
         # iterate through dataset and add to data
-        print("Loading dataset...", end="", flush=True)
+        print(f"Loading {'training' if self.is_train else 'testing'} dataset...", end="", flush=True)
         ctr = 0
         deck_names = os.listdir("processed")
         for deck in deck_names:
+            # skip appropriate deck(s) given whether or not training dataset
+            if deck == deck_names[-1] and self.is_train:
+                continue
+            if deck != deck_names[-1] and not self.is_train:
+                continue
+
             for val in CARD_VALS:
                 for suit in CARD_SUITS:
                     card_names = os.listdir(f"processed/{deck}/{val}_of_{suit}")

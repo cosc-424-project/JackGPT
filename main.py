@@ -5,5 +5,5 @@ from pipeline.trainer import Trainer
 datagen()
 
 # create and train model
-t13 = Trainer(5, .7, True)
+t13 = Trainer(5, True)
 t13.train()

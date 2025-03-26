@@ -6,15 +6,14 @@ import torch.nn.functional as F
 
 
 class Trainer:
-    def __init__(self, num_epochs: int, train_frac: float, is_13=True):
+    def __init__(self, num_epochs: int, is_13=True):
         # set training hyperparameters
         self.num_epochs = num_epochs
-        self.train_frac = train_frac
 
         # load dataset
         self.model = CardClassifier(is_13)
-        dataset = CardDataset(is_13)
-        train, test = random_split(dataset, [train_frac, 1 - train_frac])
+        train = CardDataset(is_train=True, is_13=is_13)
+        test = CardDataset(is_train=False, is_13=is_13)
         print(f"Train: {len(train)}    Test: {len(test)}")
 
         self.train_dl = DataLoader(train, batch_size=32, shuffle=True)
