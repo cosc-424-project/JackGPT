@@ -3,14 +3,14 @@ import os
 import numpy as np
 import math
 from pipeline.helpers import confirm, error, CARD_VALS, CARD_SUITS
-from sys import stderr
 from subprocess import run
 
 
 OUTPUT_SIZE = (450, 635)
 OUTPUT_IMAGE_DIR = "./images"
 INPUT_VIDEO_DIR = "./videos"
-NUM_OF_IMAGE_PER_CARD = 10
+IMAGES_PER_CARD = 10
+INSURANCE = 3 # additional frames to be converted into images if extraction ends early
 
 
 def get_rotmat(box: list[list[float]]):
@@ -71,7 +71,7 @@ def get_cropped(image, dev = False):
     MAX = gray.max()
     thresh = .15
     _ ,filtered = cv2.threshold(gray, MAX * (1 - thresh), 255, cv2.THRESH_BINARY)
-    kernel = np.ones((5, 5), np.uint8)
+    kernel = np.ones((3, 3), np.uint8)
     img_erosion = cv2.erode(filtered, kernel, iterations=1) 
 
     # get contours of image
@@ -112,16 +112,29 @@ def get_cropped(image, dev = False):
     max_y = updated[:, 1].max()
     min_y = updated[:, 1].min()
     cropped = rotated[min_y:max_y, min_x:max_x]
-    return cropped
+    
+    # finally, resize image
+    try:
+        resized = cv2.resize(cropped, (450, 635))
+    except:
+        print("Error: failed to transform extracted image.")
+        cv2.imshow('Original', image)
+        cv2.waitKey()
+        cv2.imshow('Erosion', img_erosion)
+        cv2.waitKey()
+        stand_in = image.copy()
+        cv2.drawContours(stand_in, [max_box], 0, (0, 0, 255))
+        cv2.imshow('Card Found', stand_in)
+        cv2.waitKey()
+        cv2.imshow('Rotated', rotated)
+        cv2.waitKey()
+        cv2.imshow('Final', cropped)
+        cv2.waitKey()
 
-
-def process_image(image):
-    cropped = get_cropped(image, False)
-    resized = cv2.resize(cropped, (450, 635))
     return resized
 
 
-def extract_frames(video_path, output_path, num_of_images=NUM_OF_IMAGE_PER_CARD):
+def extract_frames(video_path, output_path, num_of_images=IMAGES_PER_CARD + INSURANCE):
     os.makedirs(output_path, exist_ok=True)
     
     cap = cv2.VideoCapture(video_path)
@@ -133,11 +146,13 @@ def extract_frames(video_path, output_path, num_of_images=NUM_OF_IMAGE_PER_CARD)
     saved_frames = 0
     while cap.isOpened():
         ret, frame = cap.read()
-        if not ret:
+        if not ret or saved_frames == IMAGES_PER_CARD:
+            if saved_frames != IMAGES_PER_CARD:
+                print(video_path, frame_count, number_of_frames, saved_frames)
             break
 
         if frame_count in random_frames:
-            processed_frame = process_image(frame)
+            processed_frame = get_cropped(frame)
             frame_filename = os.path.join(output_path, f"card_{saved_frames:02d}.png")
             cv2.imwrite(frame_filename, processed_frame)
             saved_frames += 1
