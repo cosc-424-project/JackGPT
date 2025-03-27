@@ -29,7 +29,7 @@ for deck in decks:
 
     t13 = Trainer(
         num_epochs=NUM_EPOCHS,
-        is_13=True,
+        is_13=False,
         train_decks=training_decks,
         test_decks=[testing_deck]
     )

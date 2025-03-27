@@ -8,12 +8,13 @@ class CardClassifier(nn.Module):
     def __init__(self, is_13):
         super().__init__()
         self.is_13 = is_13
-        self.conv1 = nn.Conv2d(1, 4, 11)
+        self.conv1 = nn.Conv2d(1, 8, 7)
         self.pool = nn.MaxPool2d(2, 2)
-        self.conv2 = nn.Conv2d(4, 8, 7)
-        self.lin1 = nn.Linear(3536, 256)
-        self.lin2 = nn.Linear(256, 256)
-        self.lin3 = nn.Linear(256, 13 if is_13 else 52)
+        self.conv2 = nn.Conv2d(8, 32, 5)
+        self.conv3 = nn.Conv2d(32, 128, 3)
+        self.lin1 = nn.Linear(13312, 256)
+        self.lin2 = nn.Linear(256, 128)
+        self.lin3 = nn.Linear(128, 13 if is_13 else 52)
     
     def forward(self, data: torch.FloatTensor, debug = False):
         if debug:
@@ -34,8 +35,9 @@ class CardClassifier(nn.Module):
         else:
             tmp1 = self.pool(F.relu(self.conv1.forward(data)))
             tmp2 = self.pool(F.relu(self.conv2.forward(tmp1)))
-            tmp3 = torch.flatten(tmp2, 1)
-            tmp4 = F.relu(self.lin1.forward(tmp3))
-            tmp5 = F.relu(self.lin2.forward(tmp4))
-            tmp6 = self.lin3.forward(tmp5)
-            return tmp6
+            tmp3 = self.pool(F.relu(self.conv3.forward(tmp2)))
+            tmp4 = torch.flatten(tmp3, 1)
+            tmp5 = F.relu(self.lin1.forward(tmp4))
+            tmp6 = F.relu(self.lin2.forward(tmp5))
+            tmp7 = self.lin3.forward(tmp6)
+            return tmp7
