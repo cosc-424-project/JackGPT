@@ -3,6 +3,7 @@ from torch.utils.data import DataLoader, random_split
 from pipeline.dataset import CardDataset
 from pipeline.model import CardClassifier
 import torch.nn.functional as F
+from sklearn.metrics import confusion_matrix
 
 
 class Trainer:
@@ -29,20 +30,34 @@ class Trainer:
             num_seen = 0
             loss_sum = 0
 
+            true_labels = []
+            pred_labels = []
+
             # iterate over testing data
             for test_imgs, test_labels in self.test_dl:
                 test_pred: torch.FloatTensor = self.model(test_imgs)
-                tmp_correct = (test_pred.argmax(dim=1) == test_labels).float().sum().item()
+                final_pred = test_pred.argmax(dim=1)
+                tmp_correct = (final_pred == test_labels).float().sum().item()
                 num_correct += tmp_correct
                 num_seen += len(test_labels)
                 loss = F.cross_entropy(test_pred, test_labels)
                 loss_sum += loss
 
-        return loss_sum / len(self.test_dl), num_correct / num_seen
+                true_labels += test_labels
+                pred_labels += final_pred
+
+        return loss_sum / len(self.test_dl), num_correct / num_seen, true_labels, pred_labels
 
 
     def train(self):
         # Begin training
+        train_losses = []
+        test_losses = []
+        test_accs = []
+
+        true_labels: list[float]
+        pred_labels: list[float]
+
         optim = torch.optim.Adam(self.model.parameters(), lr=.001)
         for epoch in range(self.num_epochs):
             # train for one epoch
@@ -57,5 +72,11 @@ class Trainer:
             train_loss /= len(self.train_dl)
 
             # test after each epoch
-            test_loss, test_acc = self.eval_model()
+            test_loss, test_acc, true_labels, pred_labels = self.eval_model()
+
+            train_losses.append(train_loss)
+            test_losses.append(test_loss)
+            test_accs.append(test_acc)
             print(f"Epoch {epoch}, Train Loss: {train_loss:5.3f}, Test Loss: {test_loss:5.3f}, Test Acc: {test_acc:.3f}", flush=True)
+        
+        return train_losses, test_losses, test_accs, confusion_matrix(true_labels, pred_labels)
