@@ -32,7 +32,7 @@ for deck in decks:
 
     t13 = Trainer(
         num_epochs=NUM_EPOCHS,
-        is_13=False,
+        is_13=True,
         train_decks=training_decks,
         test_decks=[testing_deck]
     )
@@ -91,3 +91,8 @@ for i in range(len(CATEGORIES)):
         plt.plot(EPOCHS, results[CATEGORIES[i]][deck], label=deck)
     plt.legend()
     plt.show()
+
+acc_ctr = 0
+for deck in decks:
+    acc_ctr += results["test_accs"][deck][-1]
+print(f"\nFinal accuracy: {100 * acc_ctr / len(decks):.2f}%")

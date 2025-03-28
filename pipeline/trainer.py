@@ -1,16 +1,18 @@
 import numpy as np
 import torch
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import DataLoader
 from pipeline.dataset import CardDataset
 from pipeline.model import CardClassifier
 import torch.nn.functional as F
 from sklearn.metrics import confusion_matrix
+from pipeline.helpers import CARD_VALS, CARD_SUITS
 
 
 class Trainer:
     def __init__(self, num_epochs: int, is_13: bool, train_decks: list[str], test_decks: list[str]):
         # set training hyperparameters
         self.num_epochs = num_epochs
+        self.is_13 = is_13
 
         # load dataset
         self.model = CardClassifier(is_13)
@@ -93,4 +95,13 @@ class Trainer:
             image_np = display_image.squeeze(0).permute(1, 2, 0).numpy()
             image_np = (image_np * 255).astype(np.uint8)
 
-            return image_np, display_pred_label, display_label
+            pred_str = ""
+            true_str = ""
+            if self.is_13:
+                pred_str = CARD_VALS[display_pred_label % 13]
+                true_str = CARD_VALS[display_label % 13]
+            else:
+                pred_str = f"{CARD_VALS[display_pred_label // 4]}_of_{CARD_SUITS[display_pred_label % 4]}"
+                true_str = f"{CARD_VALS[display_label // 4]}_of_{CARD_SUITS[display_label % 4]}"
+
+            return image_np, pred_str, true_str
