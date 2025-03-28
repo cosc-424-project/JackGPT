@@ -14,6 +14,9 @@ results = {
     "train_losses": {},
     "test_losses": {},
     "test_accs": {},
+    "display_images": {},
+    "display_preds": {},
+    "display_true_labels": {},
 }
 confusions = []
 
@@ -41,6 +44,20 @@ for deck in decks:
     results["test_accs"][deck] = test_accs
     confusions.append(confusion)
 
+    image, pred_label, true_label = t13.display_samples()
+    results["display_images"][deck] = image
+    results["display_preds"][deck] = pred_label
+    results["display_true_labels"][deck] = true_label
+
+for deck in decks:
+    # cv2.namedWindow(f"{deck}: Predicted = {results['display_preds'][deck]}, True = {results['display_true_labels'][deck]}", cv2.WINDOW_NORMAL)
+    # cv2.resizeWindow(f"{deck}: Predicted = {results['display_preds'][deck]}, True = {results['display_true_labels'][deck]}", width=450, height=635)
+    # cv2.imshow(f"{deck}: Predicted = {results['display_preds'][deck]}, True = {results['display_true_labels'][deck]}", results["display_images"][deck])
+    # cv2.waitKey()
+    plt.imshow(results["display_images"][deck], cmap='gray')
+    plt.title(f"{deck}: Predicted = {results['display_preds'][deck]}, True = {results['display_true_labels'][deck]}")
+    plt.axis('off')
+    plt.show()
 
 # display confusion matrices
 for i in range(len(decks)):

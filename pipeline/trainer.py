@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 from torch.utils.data import DataLoader, random_split
 from pipeline.dataset import CardDataset
@@ -23,6 +24,7 @@ class Trainer:
         self.test_dl = DataLoader(test, batch_size=32, shuffle=True)
         print(f"Train Batches: {len(self.train_dl)}    Test Batches: {len(self.test_dl)}")
 
+        self.display = DataLoader(test, batch_size=1, shuffle=True)
 
     def eval_model(self):
         with torch.inference_mode():
@@ -80,3 +82,15 @@ class Trainer:
             print(f"Epoch {epoch}, Train Loss: {train_loss:5.3f}, Test Loss: {test_loss:5.3f}, Test Acc: {test_acc:.3f}", flush=True)
         
         return train_losses, test_losses, test_accs, confusion_matrix(true_labels, pred_labels)
+    
+    def display_samples(self): 
+        for batch in self.display:
+            display_image, display_label = batch
+            
+            display_pred : torch.FloatTensor = self.model(display_image)
+            display_pred_label = display_pred.argmax(dim=1)
+            
+            image_np = display_image.squeeze(0).permute(1, 2, 0).numpy()
+            image_np = (image_np * 255).astype(np.uint8)
+
+            return image_np, display_pred_label, display_label
