@@ -32,7 +32,7 @@ for deck in decks:
 
     t13 = Trainer(
         num_epochs=NUM_EPOCHS,
-        is_13=True,
+        is_13=False,
         train_decks=training_decks,
         test_decks=[testing_deck]
     )
@@ -50,10 +50,6 @@ for deck in decks:
     results["display_true_labels"][deck] = true_label
 
 for deck in decks:
-    # cv2.namedWindow(f"{deck}: Predicted = {results['display_preds'][deck]}, True = {results['display_true_labels'][deck]}", cv2.WINDOW_NORMAL)
-    # cv2.resizeWindow(f"{deck}: Predicted = {results['display_preds'][deck]}, True = {results['display_true_labels'][deck]}", width=450, height=635)
-    # cv2.imshow(f"{deck}: Predicted = {results['display_preds'][deck]}, True = {results['display_true_labels'][deck]}", results["display_images"][deck])
-    # cv2.waitKey()
     plt.imshow(results["display_images"][deck], cmap='gray')
     plt.title(f"{deck}: Predicted = {results['display_preds'][deck]}, True = {results['display_true_labels'][deck]}")
     plt.axis('off')
@@ -62,7 +58,10 @@ for deck in decks:
 # display confusion matrices
 for i in range(len(decks)):
     disp = ConfusionMatrixDisplay(confusion_matrix=confusions[i])
-    disp.plot()
+    disp.plot(text_kw={"fontsize": 5})
+
+    plt.xticks(rotation=-45, fontsize=5) 
+    plt.yticks(fontsize=5)
     plt.title(decks[i])
     plt.show()
 
