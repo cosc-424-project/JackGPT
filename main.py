@@ -49,6 +49,7 @@ for deck in decks:
     results["display_preds"][deck] = pred_label
     results["display_true_labels"][deck] = true_label
 
+# show an image from each deck, along with the true and predicted labels
 for deck in decks:
     plt.imshow(results["display_images"][deck], cmap='gray')
     plt.title(f"{deck}: Predicted = {results['display_preds'][deck]}, True = {results['display_true_labels'][deck]}")

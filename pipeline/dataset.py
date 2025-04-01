@@ -5,13 +5,22 @@ from pipeline.helpers import CARD_VALS, CARD_SUITS
 import os
 
 class CardDataset(Dataset):
-    def __init__(self, decks: list[str], is_13=True):
+    '''
+    A custom Pytorch Dataset which reads each deck specified in
+    the constructor. Will return 13 or 52-class labels as requested.
+    '''
+    def __init__(self, decks: list[str], is_13=True) -> None:
         self.decks = decks
         self.is_13 = is_13
         self.counts: dict[str, int] = {}
         self.img_src = self.__load_data()
 
-    def __load_data(self):
+    def __load_data(self) -> dict[str, int]:
+        '''
+        Uses the class's decks property to load every image into
+        a dictionary. Counts the number of entries for each
+        type of card.
+        '''
         data = {}
         transform = transforms.Compose([
             transforms.Grayscale(),
@@ -39,13 +48,16 @@ class CardDataset(Dataset):
 
         return data
 
-    def __len__(self):
+    def __len__(self) -> int:
+        '''
+        Returns the number of cards in the dataset.
+        '''
         ctr = 0
         for type in self.counts:
             ctr += self.counts[type]
         return ctr
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx) -> tuple[list[list[float]], int]:
         running_idx = idx
         idx_ctr = self.counts["ace_of_clubs"]
         type_ctr = 0

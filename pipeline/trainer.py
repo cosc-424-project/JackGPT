@@ -9,7 +9,12 @@ from pipeline.helpers import CARD_VALS, CARD_SUITS
 
 
 class Trainer:
-    def __init__(self, num_epochs: int, is_13: bool, train_decks: list[str], test_decks: list[str]):
+    '''
+    A glorified training-testing loop for the pipeline.model.CardClassifier. Trains the model on
+    `train_decks` and tests the model on `test_decks`. Specify whether to use 13 or 52 classes for
+    the training.
+    '''
+    def __init__(self, num_epochs: int, is_13: bool, train_decks: list[str], test_decks: list[str]) -> None:
         # set training hyperparameters
         self.num_epochs = num_epochs
         self.is_13 = is_13
@@ -28,7 +33,11 @@ class Trainer:
 
         self.display = DataLoader(test, batch_size=1, shuffle=True)
 
-    def eval_model(self):
+    def eval_model(self) -> tuple[float, float, list[int], list[float]]:
+        '''
+        Using the model's existing parameters, returns the average loss, accuracy,
+        true labels, and predicted labels.
+        '''
         with torch.inference_mode():
             num_correct = 0
             num_seen = 0
@@ -53,7 +62,11 @@ class Trainer:
         return loss_sum / len(self.test_dl), num_correct / num_seen, true_labels, pred_labels
 
 
-    def train(self):
+    def train(self) -> tuple[list[float], list[float], list[float], np.ndarray]:
+        '''
+        Trains the model using the training deck, returning the training loss, test losses, test
+        accuracies, and test confusion matrix.
+        '''
         # Begin training
         train_losses = []
         test_losses = []
@@ -85,7 +98,10 @@ class Trainer:
         
         return train_losses, test_losses, test_accs, confusion_matrix(true_labels, pred_labels)
     
-    def display_samples(self): 
+    def display_samples(self) -> tuple[np.ndarray, str, str]:
+        '''
+        Returns the NumPy array of an image in the test dataset, along with the true and predicted labels.
+        '''
         for batch in self.display:
             display_image, display_label = batch
             

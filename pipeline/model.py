@@ -4,8 +4,11 @@ import torch.nn.functional as F
 
 
 class CardClassifier(nn.Module):
-    # assumes 126x90 card images
-    def __init__(self, is_13):
+    '''
+    A simple CNN for classifing cards. Can classify the rank or the
+    rank and suit as specified.
+    '''
+    def __init__(self, is_13: bool) -> None:
         super().__init__()
         self.is_13 = is_13
         self.conv1 = nn.Conv2d(1, 8, 7)
@@ -16,7 +19,13 @@ class CardClassifier(nn.Module):
         self.lin2 = nn.Linear(256, 128)
         self.lin3 = nn.Linear(128, 13 if is_13 else 52)
     
-    def forward(self, data: torch.FloatTensor, debug = False):
+    def forward(self, data: torch.Tensor, debug = False) -> torch.Tensor:
+        '''
+        Given a 90x126 image of a card, will forward propagate.
+
+        Turning on `debug` will print the shape of each tensor along
+        the way.
+        '''
         if debug:
             print(data.shape)
             tmp1 = self.pool(F.relu(self.conv1.forward(data)))
