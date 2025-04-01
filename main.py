@@ -49,11 +49,8 @@ for deck in decks:
     results["display_preds"][deck] = pred_label
     results["display_true_labels"][deck] = true_label
 
+# show an image from each deck, along with the true and predicted labels
 for deck in decks:
-    # cv2.namedWindow(f"{deck}: Predicted = {results['display_preds'][deck]}, True = {results['display_true_labels'][deck]}", cv2.WINDOW_NORMAL)
-    # cv2.resizeWindow(f"{deck}: Predicted = {results['display_preds'][deck]}, True = {results['display_true_labels'][deck]}", width=450, height=635)
-    # cv2.imshow(f"{deck}: Predicted = {results['display_preds'][deck]}, True = {results['display_true_labels'][deck]}", results["display_images"][deck])
-    # cv2.waitKey()
     plt.imshow(results["display_images"][deck], cmap='gray')
     plt.title(f"{deck}: Predicted = {results['display_preds'][deck]}, True = {results['display_true_labels'][deck]}")
     plt.axis('off')
@@ -62,7 +59,10 @@ for deck in decks:
 # display confusion matrices
 for i in range(len(decks)):
     disp = ConfusionMatrixDisplay(confusion_matrix=confusions[i])
-    disp.plot()
+    disp.plot(text_kw={"fontsize": 5})
+
+    plt.xticks(rotation=-45, fontsize=5) 
+    plt.yticks(fontsize=5)
     plt.title(decks[i])
     plt.show()
 
@@ -91,3 +91,8 @@ for i in range(len(CATEGORIES)):
         plt.plot(EPOCHS, results[CATEGORIES[i]][deck], label=deck)
     plt.legend()
     plt.show()
+
+acc_ctr = 0
+for deck in decks:
+    acc_ctr += results["test_accs"][deck][-1]
+print(f"\nFinal accuracy: {100 * acc_ctr / len(decks):.2f}%")

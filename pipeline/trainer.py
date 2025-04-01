@@ -1,16 +1,23 @@
 import numpy as np
 import torch
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import DataLoader
 from pipeline.dataset import CardDataset
 from pipeline.model import CardClassifier
 import torch.nn.functional as F
 from sklearn.metrics import confusion_matrix
+from pipeline.helpers import CARD_VALS, CARD_SUITS
 
 
 class Trainer:
-    def __init__(self, num_epochs: int, is_13: bool, train_decks: list[str], test_decks: list[str]):
+    '''
+    A glorified training-testing loop for the pipeline.model.CardClassifier. Trains the model on
+    `train_decks` and tests the model on `test_decks`. Specify whether to use 13 or 52 classes for
+    the training.
+    '''
+    def __init__(self, num_epochs: int, is_13: bool, train_decks: list[str], test_decks: list[str]) -> None:
         # set training hyperparameters
         self.num_epochs = num_epochs
+        self.is_13 = is_13
 
         # load dataset
         self.model = CardClassifier(is_13)
@@ -26,7 +33,11 @@ class Trainer:
 
         self.display = DataLoader(test, batch_size=1, shuffle=True)
 
-    def eval_model(self):
+    def eval_model(self) -> tuple[float, float, list[int], list[float]]:
+        '''
+        Using the model's existing parameters, returns the average loss, accuracy,
+        true labels, and predicted labels.
+        '''
         with torch.inference_mode():
             num_correct = 0
             num_seen = 0
@@ -51,7 +62,11 @@ class Trainer:
         return loss_sum / len(self.test_dl), num_correct / num_seen, true_labels, pred_labels
 
 
-    def train(self):
+    def train(self) -> tuple[list[float], list[float], list[float], np.ndarray]:
+        '''
+        Trains the model using the training deck, returning the training loss, test losses, test
+        accuracies, and test confusion matrix.
+        '''
         # Begin training
         train_losses = []
         test_losses = []
@@ -83,7 +98,10 @@ class Trainer:
         
         return train_losses, test_losses, test_accs, confusion_matrix(true_labels, pred_labels)
     
-    def display_samples(self): 
+    def display_samples(self) -> tuple[np.ndarray, str, str]:
+        '''
+        Returns the NumPy array of an image in the test dataset, along with the true and predicted labels.
+        '''
         for batch in self.display:
             display_image, display_label = batch
             
@@ -93,4 +111,13 @@ class Trainer:
             image_np = display_image.squeeze(0).permute(1, 2, 0).numpy()
             image_np = (image_np * 255).astype(np.uint8)
 
-            return image_np, display_pred_label, display_label
+            pred_str = ""
+            true_str = ""
+            if self.is_13:
+                pred_str = CARD_VALS[display_pred_label % 13]
+                true_str = CARD_VALS[display_label % 13]
+            else:
+                pred_str = f"{CARD_VALS[display_pred_label // 4]}_of_{CARD_SUITS[display_pred_label % 4]}"
+                true_str = f"{CARD_VALS[display_label // 4]}_of_{CARD_SUITS[display_label % 4]}"
+
+            return image_np, pred_str, true_str
