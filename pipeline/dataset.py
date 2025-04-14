@@ -2,6 +2,8 @@ import PIL.Image
 from torch.utils.data import Dataset
 from torchvision.transforms import transforms
 from pipeline.helpers import CARD_VALS, CARD_SUITS
+from torchvision.transforms import v2
+import matplotlib.pyplot as plt
 import os
 
 class CardDataset(Dataset):
@@ -9,9 +11,9 @@ class CardDataset(Dataset):
     A custom Pytorch Dataset which reads each deck specified in
     the constructor. Will return 13 or 52-class labels as requested.
     '''
-    def __init__(self, decks: list[str], is_13=True) -> None:
+    def __init__(self, decks: list[str], num_classes=10) -> None:
         self.decks = decks
-        self.is_13 = is_13
+        self.num_classes = num_classes
         self.counts: dict[str, int] = {}
         self.img_src = self.__load_data()
 
@@ -23,8 +25,9 @@ class CardDataset(Dataset):
         '''
         data = {}
         transform = transforms.Compose([
-            transforms.Grayscale(),
             transforms.ToTensor(),
+            v2.GaussianNoise(sigma=.02),
+            transforms.GaussianBlur(7)
         ])
 
         # iterate through dataset and add to data
@@ -44,6 +47,13 @@ class CardDataset(Dataset):
                     for card in card_names:
                         pil_image = PIL.Image.open(f"processed/{deck}/{val}_of_{suit}/{card}")
                         final_img = transform(pil_image)
+
+                        # debug: show the image!
+                        # plt.imshow(final_img[0], cmap='grey')
+                        # plt.axis('off')
+                        # plt.show()
+                        # exit(1)
+
                         data[f"{val}_of_{suit}"].append(final_img)
 
         return data
@@ -67,4 +77,11 @@ class CardDataset(Dataset):
             type_ctr += 1
             idx_ctr = self.counts[f"{CARD_VALS[type_ctr // 4]}_of_{CARD_SUITS[type_ctr % 4]}"]
 
-        return self.img_src[f"{CARD_VALS[type_ctr // 4]}_of_{CARD_SUITS[type_ctr % 4]}"][running_idx], type_ctr // 4 if self.is_13 else type_ctr
+        out_img = self.img_src[f"{CARD_VALS[type_ctr // 4]}_of_{CARD_SUITS[type_ctr % 4]}"][running_idx]
+        out_label = type_ctr
+        if self.num_classes != 52:
+            out_label //= 4
+        if self.num_classes == 10 and out_label > 9:
+            out_label = 9
+
+        return out_img, out_label

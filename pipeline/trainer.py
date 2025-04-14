@@ -14,16 +14,16 @@ class Trainer:
     `train_decks` and tests the model on `test_decks`. Specify whether to use 13 or 52 classes for
     the training.
     '''
-    def __init__(self, num_epochs: int, is_13: bool, train_decks: list[str], test_decks: list[str]) -> None:
+    def __init__(self, num_epochs: int, num_classes: int, train_decks: list[str], test_decks: list[str]) -> None:
         # set training hyperparameters
         self.num_epochs = num_epochs
-        self.is_13 = is_13
+        self.num_classes = num_classes
 
         # load dataset
-        self.model = CardClassifier(is_13)
+        self.model = CardClassifier(num_classes)
         print("Loading dataset...", end="", flush=True)
-        train = CardDataset(decks=train_decks, is_13=is_13)
-        test = CardDataset(decks=test_decks, is_13=is_13)
+        train = CardDataset(decks=train_decks, num_classes=num_classes)
+        test = CardDataset(decks=test_decks, num_classes=num_classes)
         print("done", flush=True)
         print(f"Train: {len(train)}    Test: {len(test)}")
 
@@ -111,12 +111,12 @@ class Trainer:
             image_np = display_image.squeeze(0).permute(1, 2, 0).numpy()
             image_np = (image_np * 255).astype(np.uint8)
 
-            pred_str = ""
-            true_str = ""
-            if self.is_13:
+            pred_str = str(display_pred_label.item())
+            true_str = str(display_label.item())
+            if self.num_classes == 13:
                 pred_str = CARD_VALS[display_pred_label % 13]
                 true_str = CARD_VALS[display_label % 13]
-            else:
+            elif self.num_classes == 52:
                 pred_str = f"{CARD_VALS[display_pred_label // 4]}_of_{CARD_SUITS[display_pred_label % 4]}"
                 true_str = f"{CARD_VALS[display_label // 4]}_of_{CARD_SUITS[display_label % 4]}"
 

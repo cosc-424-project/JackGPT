@@ -1,7 +1,6 @@
 from pipeline.datagen import datagen
 from pipeline.trainer import Trainer
 from sklearn.metrics import ConfusionMatrixDisplay
-from pipeline.helpers import CARD_VALS, CARD_SUITS
 import matplotlib.pyplot as plt
 import os
 
@@ -22,7 +21,7 @@ confusions = []
 
 
 # create and train model
-NUM_EPOCHS = 5
+NUM_EPOCHS = 3
 decks = os.listdir("processed")
 for deck in decks:
     print(f"\nUsing {deck} as testing dataset")
@@ -32,7 +31,7 @@ for deck in decks:
 
     t13 = Trainer(
         num_epochs=NUM_EPOCHS,
-        is_13=False,
+        num_classes=10,
         train_decks=training_decks,
         test_decks=[testing_deck]
     )
