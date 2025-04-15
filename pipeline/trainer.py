@@ -14,16 +14,16 @@ class Trainer:
     `train_decks` and tests the model on `test_decks`. Specify whether to use 13 or 52 classes for
     the training.
     '''
-    def __init__(self, num_epochs: int, num_classes: int, train_decks: list[str], test_decks: list[str]) -> None:
+    def __init__(self, num_epochs: int, num_classes: int, train_decks: list[str], test_decks: list[str], do_augment: bool, do_bnorm: bool, dropout: float) -> None:
         # set training hyperparameters
         self.num_epochs = num_epochs
         self.num_classes = num_classes
 
         # load dataset
-        self.model = CardClassifier(num_classes)
+        self.model = CardClassifier(num_classes, do_bnorm, dropout)
         print("Loading dataset...", end="", flush=True)
-        train = CardDataset(decks=train_decks, num_classes=num_classes)
-        test = CardDataset(decks=test_decks, num_classes=num_classes)
+        train = CardDataset(decks=train_decks, num_classes=num_classes, do_augment=do_augment)
+        test = CardDataset(decks=test_decks, num_classes=num_classes, do_augment=do_augment)
         print("done", flush=True)
         print(f"Train: {len(train)}    Test: {len(test)}")
 
@@ -39,6 +39,7 @@ class Trainer:
         true labels, and predicted labels.
         '''
         with torch.inference_mode():
+            self.model.eval()
             num_correct = 0
             num_seen = 0
             loss_sum = 0
@@ -58,6 +59,8 @@ class Trainer:
 
                 true_labels += test_labels
                 pred_labels += final_pred
+            
+            self.model.train()
 
         return loss_sum / len(self.test_dl), num_correct / num_seen, true_labels, pred_labels
 
@@ -121,3 +124,6 @@ class Trainer:
                 true_str = f"{CARD_VALS[display_label // 4]}_of_{CARD_SUITS[display_label % 4]}"
 
             return image_np, pred_str, true_str
+        
+    def save(self, path: str) -> None:
+        torch.save(self.model.state_dict(), path)

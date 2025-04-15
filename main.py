@@ -21,7 +21,7 @@ confusions = []
 
 
 # create and train model
-NUM_EPOCHS = 3
+NUM_EPOCHS = 5
 decks = os.listdir("processed")
 for deck in decks:
     print(f"\nUsing {deck} as testing dataset")
@@ -29,13 +29,17 @@ for deck in decks:
     training_decks = decks.copy()
     training_decks.remove(deck)
 
-    t13 = Trainer(
+    trainer = Trainer(
         num_epochs=NUM_EPOCHS,
         num_classes=10,
         train_decks=training_decks,
-        test_decks=[testing_deck]
+        test_decks=[testing_deck],
+        do_augment=True,
+        do_bnorm=True,
+        dropout=.2
     )
-    train_losses, test_losses, test_accs, confusion = t13.train()
+    train_losses, test_losses, test_accs, confusion = trainer.train()
+    trainer.save(f"ignore_data/models/test_{deck}+epoch_3.pt")
 
     # add to results dict
     results["train_losses"][deck] = train_losses
@@ -43,7 +47,7 @@ for deck in decks:
     results["test_accs"][deck] = test_accs
     confusions.append(confusion)
 
-    image, pred_label, true_label = t13.display_samples()
+    image, pred_label, true_label = trainer.display_samples()
     results["display_images"][deck] = image
     results["display_preds"][deck] = pred_label
     results["display_true_labels"][deck] = true_label

@@ -11,13 +11,13 @@ class CardDataset(Dataset):
     A custom Pytorch Dataset which reads each deck specified in
     the constructor. Will return 13 or 52-class labels as requested.
     '''
-    def __init__(self, decks: list[str], num_classes=10) -> None:
+    def __init__(self, decks: list[str], num_classes: int, do_augment: bool) -> None:
         self.decks = decks
         self.num_classes = num_classes
         self.counts: dict[str, int] = {}
-        self.img_src = self.__load_data()
+        self.img_src = self.__load_data(do_augment)
 
-    def __load_data(self) -> dict[str, int]:
+    def __load_data(self, do_augment: bool) -> dict[str, int]:
         '''
         Uses the class's decks property to load every image into
         a dictionary. Counts the number of entries for each
@@ -28,6 +28,8 @@ class CardDataset(Dataset):
             transforms.ToTensor(),
             v2.GaussianNoise(sigma=.02),
             transforms.GaussianBlur(7)
+        ]) if do_augment else transforms.Compose([
+            transforms.ToTensor(),
         ])
 
         # iterate through dataset and add to data
