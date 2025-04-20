@@ -126,4 +126,4 @@ class Trainer:
             return image_np, pred_str, true_str
         
     def save(self, path: str) -> None:
-        torch.save(self.model.state_dict(), path)
+        torch.save(self.model, path)
