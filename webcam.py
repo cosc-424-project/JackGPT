@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-from dotenv import load_dotenv
 import os
 import torch
 import torch.nn as nn
@@ -11,14 +10,14 @@ import PIL.Image
 MIN_AREA = 2000
 OUTPUT_WIDTH, OUTPUT_HEIGHT = 450, 635
 CLASSES = ["Ace", "2", "3", "4", "5", "6", "7", "8", "9", "Face/10"]
-
+MODEL_PATH = os.path.join("models", "test_deck2+epoch_3.pt")
 
 def image_preprocessing(image):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     blurred = cv2.GaussianBlur(gray, (5, 5), 0)
 
     _, filtered = cv2.threshold(
-        blurred, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU
+        blurred, 175, 255, cv2.THRESH_BINARY_INV
     )
 
     kernel = np.ones((3, 3), np.uint8)
@@ -74,18 +73,13 @@ def extract_card(image, box):
 
 
 def main():
-    load_dotenv()
+    cap = cv2.VideoCapture(1) 
 
-    camera_ip_address = os.getenv("CAMERA_IP_ADDRESS")
-    camera_port = os.getenv("PORT")
+    if not cap.isOpened():
+        print("Cannot open camera")
+        exit()
 
-    url = f"http://{camera_ip_address}:{camera_port}/video"
-
-    cap = cv2.VideoCapture(url)
-
-    model: torch.nn.Module = torch.load(
-        "models/test_deck2+epoch_3.pt", weights_only=False
-    )
+    model: torch.nn.Module = torch.load(MODEL_PATH, weights_only=False)
     model.eval()
 
     transform = transforms.Compose(
