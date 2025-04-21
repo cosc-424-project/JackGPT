@@ -7,3 +7,6 @@ ignore_data
 ignore.py
 
 pipeline/__pycache__
+
+.env
+models
