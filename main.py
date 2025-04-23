@@ -53,7 +53,7 @@ def pipeline(
         )
         train_losses, test_losses, test_accs, confusion = trainer.train()
         if output_dir != None and output_dir != "":
-            trainer.save(output_dir + f"/{deck}_model.pt")
+            trainer.save(f"{output_dir}/{deck}_model.pt")
 
         # add to results dict
         results["train_losses"][deck] = train_losses
@@ -181,7 +181,7 @@ pipeline(
     do_augment=False,
     do_bnorm=True,
     dropout=.0,
-    output_dir=f"results/_10",
+    output_dir=f"results/_bn_10",
     do_show=False
 )
 
@@ -193,7 +193,7 @@ pipeline(
     do_augment=True,
     do_bnorm=False,
     dropout=.0,
-    output_dir=f"results/_10",
+    output_dir=f"results/_da_10",
     do_show=False
 )
 
@@ -205,6 +205,6 @@ pipeline(
     do_augment=False,
     do_bnorm=False,
     dropout=.2,
-    output_dir=f"results/_10",
+    output_dir=f"results/_do_10",
     do_show=False
 )

@@ -12,16 +12,19 @@ class CardClassifier(nn.Module):
         super().__init__()
         self.is_13 = num_classes
         self.conv1 = nn.Conv2d(1, 8, 7)
-        self.bnorm1 = nn.BatchNorm2d(8) if do_bnorm else lambda x: x
+        self.bnorm1 = nn.BatchNorm2d(8) if do_bnorm else self.identity
         self.dropout = nn.Dropout2d(dropout)
         self.pool = nn.MaxPool2d(2, 2)
         self.conv2 = nn.Conv2d(8, 32, 5)
-        self.bnorm2 = nn.BatchNorm2d(32) if do_bnorm else lambda x: x
+        self.bnorm2 = nn.BatchNorm2d(32) if do_bnorm else self.identity
         self.conv3 = nn.Conv2d(32, 128, 3)
-        self.bnorm3 = nn.BatchNorm2d(128) if do_bnorm else lambda x: x
+        self.bnorm3 = nn.BatchNorm2d(128) if do_bnorm else self.identity
         self.lin1 = nn.Linear(13312, 256)
         self.lin2 = nn.Linear(256, 128)
         self.lin3 = nn.Linear(128, num_classes)
+
+    def identity(self, data):
+        return data
     
     def forward(self, data: torch.Tensor, debug = False) -> torch.Tensor:
         '''
