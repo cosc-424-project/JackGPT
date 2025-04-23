@@ -48,7 +48,7 @@ def pipeline(
             dropout=dropout
         )
         train_losses, test_losses, test_accs, confusion = trainer.train()
-        trainer.save(f"ignore_data/models/test_{deck}+epoch_3.pt")
+        trainer.save(output_dir + f"/{deck}_model.pt")
 
         # add to results dict
         results["train_losses"][deck] = train_losses
@@ -133,7 +133,7 @@ def pipeline(
     if output_dir != None and output_dir != "":
         f = open(output_dir + '/accuracy.txt', 'w')
         for i in range(len(decks)):
-            f.write(f"{decks[i]}: {final_accs[i]:.4f}%\n")
+            f.write(f"{decks[i]}: {100 * final_accs[i]:.2f}%\n")
         f.write(f"\nFinal accuracy: {100 * acc_ctr / len(decks):.2f}%")
         f.close()
 
@@ -160,20 +160,50 @@ dropout?
 _bn_da_13
 '''
 
-BOOL_VALS = [True, False]
-CLASS_NUMS = [10, 13, 52]
+# one with nothing
+print(f"\nWorking on results/_10")
+pipeline(
+    num_epochs=5,
+    num_classes=10,
+    do_augment=False,
+    do_bnorm=False,
+    dropout=.0,
+    output_dir=f"results/_10",
+    do_show=False
+)
 
-for do_bnorm in BOOL_VALS:
-    for do_augment in BOOL_VALS:
-        for do_dropout in BOOL_VALS:
-            for num_classes in CLASS_NUMS:
-                print(f"\nWorking on results/{'_bn' if do_bnorm else ''}{'_da' if do_augment else ''}{'_do' if do_dropout else ''}_{num_classes}")
-                pipeline(
-                    num_epochs=5,
-                    num_classes=num_classes,
-                    do_augment=do_augment,
-                    do_bnorm=do_bnorm,
-                    dropout=.2 if do_dropout else .0,
-                    output_dir=f"results/{'_bn' if do_bnorm else ''}{'_da' if do_augment else ''}{'_do' if do_dropout else ''}_{num_classes}",
-                    do_show=False
-                )
+# one with bnorm
+print(f"\nWorking on results/_bn_10")
+pipeline(
+    num_epochs=5,
+    num_classes=10,
+    do_augment=False,
+    do_bnorm=True,
+    dropout=.0,
+    output_dir=f"results/_10",
+    do_show=False
+)
+
+# one with data aug
+print(f"\nWorking on results/_da_10")
+pipeline(
+    num_epochs=5,
+    num_classes=10,
+    do_augment=True,
+    do_bnorm=False,
+    dropout=.0,
+    output_dir=f"results/_10",
+    do_show=False
+)
+
+# one with dropout
+print(f"\nWorking on results/_do_10")
+pipeline(
+    num_epochs=5,
+    num_classes=10,
+    do_augment=False,
+    do_bnorm=False,
+    dropout=.2,
+    output_dir=f"results/_10",
+    do_show=False
+)
