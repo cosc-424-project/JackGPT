@@ -19,6 +19,10 @@ def pipeline(
     do_show: bool,
     output_dir: str | None,
 ) -> None:
+    # create output path if not exist
+    if output_dir != None and output_dir != "" and not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
     results = {
         "train_losses": {},
         "test_losses": {},
@@ -48,7 +52,8 @@ def pipeline(
             dropout=dropout
         )
         train_losses, test_losses, test_accs, confusion = trainer.train()
-        trainer.save(output_dir + f"/{deck}_model.pt")
+        if output_dir != None and output_dir != "":
+            trainer.save(output_dir + f"/{deck}_model.pt")
 
         # add to results dict
         results["train_losses"][deck] = train_losses
@@ -60,10 +65,6 @@ def pipeline(
         results["display_images"][deck] = image
         results["display_preds"][deck] = pred_label
         results["display_true_labels"][deck] = true_label
-
-    # create output path if not exist
-    if output_dir != None and output_dir != "" and not os.path.exists(output_dir):
-        os.makedirs(output_dir)
 
     # show an image from each deck, along with the true and predicted labels
     plt.ioff()
