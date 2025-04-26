@@ -7,6 +7,7 @@ import torchvision.transforms as transforms
 import torchvision.transforms.v2 as v2
 import argparse
 
+
 MIN_AREA = 2000
 OUTPUT_WIDTH, OUTPUT_HEIGHT = 450, 635
 CLASSES = ["Ace", "2", "3", "4", "5", "6", "7", "8", "9", "Face/10"]
