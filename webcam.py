@@ -7,6 +7,8 @@ import torchvision.transforms as transforms
 import torchvision.transforms.v2 as v2
 import argparse
 
+export OPENCV_LOG_LEVEL=OFF
+
 MIN_AREA = 2000
 OUTPUT_WIDTH, OUTPUT_HEIGHT = 450, 635
 CLASSES = ["Ace", "2", "3", "4", "5", "6", "7", "8", "9", "Face/10"]
@@ -138,8 +140,52 @@ def add_label(image, prediction, position, color, font_scale = 0.5):
     )
 
 
+def get_chosen_idx() -> int:
+    # os.environ["OPENCV_LOG_LEVEL"]="SILENT"
+    # os.environ['OPENCV_FFMPEG_LOGLEVEL'] = "-8"
+
+    # get the available video capture indices
+    print("Searching for valid video devices... expect 1 error", flush=True)
+    video_idxs = []
+    cur_idx = 0
+    found_invalid = False
+    while not found_invalid:
+        tmp_cap = cv2.VideoCapture(cur_idx)
+        if not tmp_cap.isOpened():
+            found_invalid = True
+            break
+        print(f"Found device #{cur_idx}", flush=True)
+        tmp_cap.release()
+        video_idxs.append(cur_idx)
+        cur_idx += 1
+
+    # if none available, error
+    if len(video_idxs) == 0:
+        print("Error: no available cameras.", flush=True)
+        exit(1)
+
+    # default if there's only one
+    elif len(video_idxs) == 1:
+        chosen_idx = video_idxs[0]
+        print(f"Only available video device is #{chosen_idx}.", flush=True)
+
+    # else, have user decide
+    else:
+        while chosen_idx == -1:
+            try:
+                chosen_idx = int(input(f"Which camera would you like to use [0-{video_idxs[-1]}]? "))
+                if chosen_idx > video_idxs[-1] or chosen_idx < 0:
+                    chosen_idx = -1
+            except ValueError:
+                continue
+            except KeyboardInterrupt:
+                exit()
+
+    return chosen_idx
+
 def main():
-    cap = cv2.VideoCapture(1)
+    chosen_idx = get_chosen_idx()
+    cap = cv2.VideoCapture(chosen_idx)
 
     if not cap.isOpened():
         print("Cannot open camera")
@@ -151,7 +197,7 @@ def main():
     )
 
     parser.add_argument("--debug", action="store_true", help="Show debug options")
-    parser.add_argument("--classes", type=int, help="The number of output classes")
+    parser.add_argument("--classes", type=int, help="The number of output classes", required=True)
 
     args = parser.parse_args()
 
