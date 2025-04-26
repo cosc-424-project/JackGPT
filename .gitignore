@@ -2,6 +2,7 @@ data
 mp4_data
 raw_images
 processed
+results
 
 ignore_data
 ignore.py
