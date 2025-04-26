@@ -5,7 +5,6 @@ import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
 import torchvision.transforms.v2 as v2
-import PIL.Image
 import argparse
 
 MIN_AREA = 2000
@@ -123,9 +122,8 @@ def make_prediction(card, model, num_of_classes):
     return get_class_name(num_of_classes, predicted_idx)
 
 
-def add_label(image, prediction, position, color):
+def add_label(image, prediction, position, color, font_scale = 0.5):
     font = cv2.FONT_HERSHEY_SIMPLEX
-    font_scale = 0.75
     thickness = 2
 
     cv2.putText(
@@ -183,7 +181,7 @@ def main():
             values, counts = np.unique(predictions, return_counts=True)
             final_prediction = values[np.argmax(counts)]
             center = int(np.mean(box[:, 0])) - 10, int(np.mean(box[:, 1]))
-            add_label(image, final_prediction, center, COLORS[-1])
+            add_label(image, final_prediction, center, COLORS[-1], font_scale=1)
 
         cv2.imshow("IP Camera Feed", cv2.resize(image, (1280, 960)))
 
