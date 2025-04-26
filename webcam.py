@@ -139,9 +139,6 @@ def add_label(image, prediction, position, color, font_scale = 0.5):
 
 
 def get_chosen_idx() -> int:
-    # os.environ["OPENCV_LOG_LEVEL"]="SILENT"
-    # os.environ['OPENCV_FFMPEG_LOGLEVEL'] = "-8"
-
     # get the available video capture indices
     print("Searching for valid video devices... expect 1 error", flush=True)
     video_idxs = []
