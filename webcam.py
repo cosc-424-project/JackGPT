@@ -11,11 +11,6 @@ import argparse
 MIN_AREA = 2000
 OUTPUT_WIDTH, OUTPUT_HEIGHT = 450, 635
 CLASSES = ["Ace", "2", "3", "4", "5", "6", "7", "8", "9", "Face/10"]
-MODEL_PATHS = [
-    os.path.join("models", "test_deck1+epoch_3.pt"),
-    os.path.join("models", "test_deck2+epoch_3.pt"),
-    os.path.join("models", "test_deck4+epoch_3.pt"),
-]
 TRANSFORMATIONS = transforms.Compose(
     [
         transforms.ToTensor(),
@@ -29,6 +24,29 @@ COLORS = [
     (0, 0, 255),
     (0, 255, 255),
 ]
+
+
+def get_model_path(num_of_classes):
+    return [
+        os.path.join("models", f"class_{num_of_classes}_model_{num_of_models}.pt")
+        for num_of_models in range(1, 4)
+    ]
+
+
+def get_class_name(num_of_classes, prediction_index):
+    classes_10 = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "Face/10"]
+    classes_13 = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
+    suits = ["C", "D", "H", "S"]
+
+    if num_of_classes == 10:
+        return classes_10[prediction_index]
+    if num_of_classes == 13:
+        return classes_13[prediction_index]
+    if num_of_classes == 52:
+        rank = classes_13[prediction_index % 13]
+        suit = suits[prediction_index // 13]
+
+        return f"{suit}{rank}"
 
 
 def image_preprocessing(image):
@@ -95,12 +113,12 @@ def extract_card(image, contour):
     return transformed, box
 
 
-def make_prediction(card, model):
+def make_prediction(card, model, num_of_classes):
     logits = model(card.unsqueeze(0))
     probs = nn.Softmax(dim=1)(logits)
     predicted_idx = torch.argmax(probs, dim=1).item()
 
-    return CLASSES[predicted_idx]
+    return get_class_name(num_of_classes, predicted_idx)
 
 
 def add_label(image, prediction, position, color):
@@ -127,16 +145,20 @@ def main():
         print("Cannot open camera")
         exit()
 
-    models = [torch.load(path, weights_only=False).eval() for path in MODEL_PATHS]
-
     parser = argparse.ArgumentParser(
         prog="JackGPT Webcam",
         description="This script uses the webcam to classify playing cards",
     )
 
     parser.add_argument("--debug", action="store_true", help="Show debug options")
+    parser.add_argument("--classes", type=int, help="The number of output classes")
 
     args = parser.parse_args()
+
+    models = [
+        torch.load(path, weights_only=False).eval()
+        for path in get_model_path(args.classes)
+    ]
 
     while True:
         ret, image = cap.read()
@@ -150,7 +172,7 @@ def main():
         for contour in contours:
             card, box = extract_card(image, contour)
 
-            predictions = np.array([make_prediction(card, model) for model in models])
+            predictions = np.array([make_prediction(card, model, args.classes) for model in models])
 
             if args.debug:
                 for index, (prediction, color) in enumerate(zip(predictions, COLORS)):
@@ -161,7 +183,7 @@ def main():
             center = int(np.mean(box[:, 0])) - 10, int(np.mean(box[:, 1]))
             add_label(image, final_prediction, center, COLORS[-1])
 
-        cv2.imshow("IP Camera Feed", image)
+        cv2.imshow("IP Camera Feed", cv2.resize(image, (1280, 960)))
 
         if cv2.waitKey(1) & 0xFF == ord("q"):
             break
