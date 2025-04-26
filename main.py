@@ -108,15 +108,20 @@ def pipeline(
         "Loss", "Loss", "Accuracy"
     ]
 
-    EPOCHS = range(num_epochs)
+    EPOCHS = range(1, num_epochs + 1)
     for i in range(len(CATEGORIES)):
         plt.figure(figsize=(10, 6))
         plt.title(TITLES[i])
         plt.xlabel("Epochs")
+        plt.xticks(EPOCHS if CATEGORIES[i] == "train_losses" else range(0, num_epochs + 1))
         plt.ylabel(Y_LABELS[i])
         for deck in decks:
-            plt.plot(EPOCHS, results[CATEGORIES[i]][deck], label=deck)
-        plt.legend()
+            plt.plot(
+                EPOCHS if CATEGORIES[i] == "train_losses" else range(0, num_epochs + 1),
+                results[CATEGORIES[i]][deck],
+                label=deck
+            )
+        plt.legend(loc="center right")
         if output_dir != None and output_dir != "":
             plt.savefig(output_dir + f'/{CATEGORIES[i]}.png')
         if do_show:
@@ -161,50 +166,14 @@ dropout?
 _bn_da_13
 '''
 
-# one with nothing
-print(f"\nWorking on results/_10")
+# 52-class _bn_do
+print(f"\nWorking on results/_bn_do_52")
 pipeline(
     num_epochs=5,
-    num_classes=10,
-    do_augment=False,
-    do_bnorm=False,
-    dropout=.0,
-    output_dir=f"results/_10",
-    do_show=False
-)
-
-# one with bnorm
-print(f"\nWorking on results/_bn_10")
-pipeline(
-    num_epochs=5,
-    num_classes=10,
+    num_classes=52,
     do_augment=False,
     do_bnorm=True,
-    dropout=.0,
-    output_dir=f"results/_bn_10",
-    do_show=False
-)
-
-# one with data aug
-print(f"\nWorking on results/_da_10")
-pipeline(
-    num_epochs=5,
-    num_classes=10,
-    do_augment=True,
-    do_bnorm=False,
-    dropout=.0,
-    output_dir=f"results/_da_10",
-    do_show=False
-)
-
-# one with dropout
-print(f"\nWorking on results/_do_10")
-pipeline(
-    num_epochs=5,
-    num_classes=10,
-    do_augment=False,
-    do_bnorm=False,
     dropout=.2,
-    output_dir=f"results/_do_10",
+    output_dir=f"results/_bn_do_52",
     do_show=False
 )

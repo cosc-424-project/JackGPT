@@ -75,6 +75,11 @@ class Trainer:
         test_losses = []
         test_accs = []
 
+        # create first test loss w/o any training
+        test_loss, test_acc, true_labels, pred_labels = self.eval_model()
+        test_losses.append(test_loss)
+        test_accs.append(test_acc)
+
         true_labels: list[float]
         pred_labels: list[float]
 
