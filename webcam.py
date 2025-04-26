@@ -27,9 +27,11 @@ COLORS = [
 
 
 def get_model_path(num_of_classes):
+    total_num_models = 5 if num_of_classes == 52 else 3
+
     return [
         os.path.join("models", f"class_{num_of_classes}_model_{num_of_models}.pt")
-        for num_of_models in range(1, 4)
+        for num_of_models in range(1, total_num_models + 1)
     ]
 
 
@@ -43,8 +45,8 @@ def get_class_name(num_of_classes, prediction_index):
     if num_of_classes == 13:
         return classes_13[prediction_index]
     if num_of_classes == 52:
-        rank = classes_13[prediction_index % 13]
-        suit = suits[prediction_index // 13]
+        rank = classes_13[prediction_index // 4]
+        suit = suits[prediction_index % 4]
 
         return f"{suit}{rank}"
 
@@ -176,7 +178,7 @@ def main():
 
             if args.debug:
                 for index, (prediction, color) in enumerate(zip(predictions, COLORS)):
-                    add_label(image, prediction, box[index], color)
+                    add_label(image, prediction, box[index % 4], color)
 
             values, counts = np.unique(predictions, return_counts=True)
             final_prediction = values[np.argmax(counts)]
