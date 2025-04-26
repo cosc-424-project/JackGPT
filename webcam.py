@@ -7,7 +7,6 @@ import torchvision.transforms as transforms
 import torchvision.transforms.v2 as v2
 import argparse
 
-export OPENCV_LOG_LEVEL=OFF
 
 MIN_AREA = 2000
 OUTPUT_WIDTH, OUTPUT_HEIGHT = 450, 635
