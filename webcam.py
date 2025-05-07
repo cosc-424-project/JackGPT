@@ -26,6 +26,7 @@ COLORS = [
 ]
 
 
+# get trained models from filesystem
 def get_model_path(num_of_classes):
     total_num_models = 5 if num_of_classes == 52 else 3
 
@@ -35,6 +36,7 @@ def get_model_path(num_of_classes):
     ]
 
 
+# get output class name from number of input classes and predictions
 def get_class_name(num_of_classes, prediction_index):
     classes_10 = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "Face/10"]
     classes_13 = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
@@ -51,6 +53,7 @@ def get_class_name(num_of_classes, prediction_index):
         return f"{suit}{rank}"
 
 
+# create binary frame representation
 def image_preprocessing(image):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     blurred = cv2.GaussianBlur(gray, (5, 5), 0)
@@ -63,6 +66,7 @@ def image_preprocessing(image):
     return img_erosion
 
 
+# get contours from the image
 def get_contours(processed_image):
     canny_output = cv2.Canny(processed_image, 100, 200)
     contours, _ = cv2.findContours(
@@ -72,6 +76,7 @@ def get_contours(processed_image):
     return [contour for contour in contours if cv2.contourArea(contour) > MIN_AREA]
 
 
+# get corners of rectangles
 def order_points(pts):
     rect = np.zeros((4, 2), dtype="float32")
 
@@ -86,6 +91,7 @@ def order_points(pts):
     return rect
 
 
+# get card from image
 def extract_card(image, contour):
     rect = cv2.minAreaRect(contour)
     box = cv2.boxPoints(rect)
@@ -115,6 +121,7 @@ def extract_card(image, contour):
     return transformed, box
 
 
+# preform prediction on card
 def make_prediction(card, model, num_of_classes):
     logits = model(card.unsqueeze(0))
     probs = nn.Softmax(dim=1)(logits)
@@ -123,7 +130,8 @@ def make_prediction(card, model, num_of_classes):
     return get_class_name(num_of_classes, predicted_idx)
 
 
-def add_label(image, prediction, position, color, font_scale = 0.5):
+# add label to image
+def add_label(image, prediction, position, color, font_scale=0.5):
     font = cv2.FONT_HERSHEY_SIMPLEX
     thickness = 2
 
@@ -169,7 +177,9 @@ def get_chosen_idx() -> int:
     else:
         while chosen_idx == -1:
             try:
-                chosen_idx = int(input(f"Which camera would you like to use [0-{video_idxs[-1]}]? "))
+                chosen_idx = int(
+                    input(f"Which camera would you like to use [0-{video_idxs[-1]}]? ")
+                )
                 if chosen_idx > video_idxs[-1] or chosen_idx < 0:
                     chosen_idx = -1
             except ValueError:
@@ -179,6 +189,7 @@ def get_chosen_idx() -> int:
 
     return chosen_idx
 
+
 def main():
     chosen_idx = get_chosen_idx()
     cap = cv2.VideoCapture(chosen_idx)
@@ -187,39 +198,52 @@ def main():
         print("Cannot open camera")
         exit()
 
+    # handle arguments
     parser = argparse.ArgumentParser(
         prog="JackGPT Webcam",
         description="This script uses the webcam to classify playing cards",
     )
-
     parser.add_argument("--debug", action="store_true", help="Show debug options")
-    parser.add_argument("--classes", type=int, help="The number of output classes", required=True)
+    parser.add_argument(
+        "--classes", type=int, help="The number of output classes", required=True
+    )
 
     args = parser.parse_args()
 
+    # load models
     models = [
         torch.load(path, weights_only=False).eval()
         for path in get_model_path(args.classes)
     ]
 
     while True:
+        # frame from camera
         ret, image = cap.read()
+
         if not ret:
             print("Failed to grab frame")
             break
 
+        # get contours from frame
         processed_image = image_preprocessing(image)
         contours = get_contours(processed_image)
 
+        # for each frame
         for contour in contours:
+            # get the card
             card, box = extract_card(image, contour)
 
-            predictions = np.array([make_prediction(card, model, args.classes) for model in models])
+            # make prediction
+            predictions = np.array(
+                [make_prediction(card, model, args.classes) for model in models]
+            )
 
+            # add each model label
             if args.debug:
                 for index, (prediction, color) in enumerate(zip(predictions, COLORS)):
                     add_label(image, prediction, box[index % 4], color)
 
+            # add final label
             values, counts = np.unique(predictions, return_counts=True)
             final_prediction = values[np.argmax(counts)]
             center = int(np.mean(box[:, 0])) - 10, int(np.mean(box[:, 1]))
