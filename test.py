@@ -3,6 +3,7 @@ import torchvision.transforms as transforms
 import torchvision.transforms.v2 as v2
 import PIL.Image
 
+# data agumentations 
 model: torch.nn.Module = torch.load("./ignore_data/models/test_deck1+epoch_3.pt", weights_only=False)
 transform = transforms.Compose([
     transforms.ToTensor(),
